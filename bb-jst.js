@@ -1,4 +1,4 @@
-// require jQuery and Underscore, Shamelessly stolen from Backbone's source code
+// Make bbJST global and require jQuery and Underscore; shamelessly stolen from Backbone's source code
 (function(factory) {
 
   // Establish the root object, `window` (`self`) in the browser, or `global` on the server.
@@ -28,11 +28,15 @@
 })(function(root, bbJST, _, $) {
     // keep track of templates that are already in the process of loaded
     var alreadyLoading = {}
-    // view is a backbone view object; templateName is the name of the id within the template, minus 'tpl'; path is an option for specifying the file path, if it doesn't follow the bbJST convention
-    bbJST.template = function (templateName, view, path) {
+    // View is a Backbone View object; templateName is the name of the template's script tag's id, minus 'tpl'; 
+    // for options, you can specify the template's extension or path. 
+    bbJST.template = function (templateName, view, options) {
         var self = this;
+        var options = options || {};
+        options.extension = options.extension || this.extension || false;
+        options.directory = options.directory || this.directory || false;
         if (!(view instanceof Backbone.View)) {
-            throw new Error('You must call bbJST on a Backbone View');
+            throw new Error("The argument 'view' must be a Backbone View object.");
         }
         // don't call Backbone.View.render until the template is loaded
         view.render = _.wrap(view.render, function(render) {
@@ -42,33 +46,40 @@
                 return render.call(view);
             }
 		});
-    // check it the template it already loaded    
+    // Check if the template is already loaded onto the DOM    
         if (document.getElementById(templateName + '-tpl')) {
             return _.template($('#' + templateName + '-tpl').html());
         } else {
-    // make sure the template is only loaded once; this check is useful if, for example, you want to load many row templates for a 
-    // table. Without this check, many, if not all, of the table's rowViews will load the same template and you will have many redundant ajax calls.
+    // Make sure the template is loaded only once. This check is useful if, for example, you want to load many row templates in a 
+    // table. Usually every row's bbJST.template() function will be called before their shared template is loaded into the DOM.
             if (alreadyLoading[templateName]) {
+                // Wait until the shared template is loaded
                 setTimeout(function () {
                     view.template =  _.template($('#' + templateName + '-tpl').html());
-                    view.render();
+                    if (shouldRender(options.autoRender, self.autoRender)) view.render();
                 },0);
-            } else {
-                
-                // create a holder for the template and load it into said holder
+            } else {        
+                // Create a holder for the template and load it into said holder
                 alreadyLoading[templateName] = true;
-                var pathName = getPathName(templateName, path);
+                var pathName = getPathName(templateName, options);
                 $('body').append('<div id="'+templateName+'-tpl-holder"></div>');
                 $('body').find('#'+templateName+'-tpl-holder').load(pathName, function () {
                     view.template =  _.template($('#' + templateName + '-tpl').html());
-                    view.render();
+                    if (shouldRender(options.autoRender, self.autoRender)) view.render();
                 });                
             }
         }
     };
 
-    var getPathName = function (templateName, path) {
-        return (path) ? path : './templates/' + templateName + '.jst.ejs';
+    var getPathName = function (templateName, options) {
+        var extension = options.extension || '.jst.ejs',
+        directory = options.directory || '/templates/';
+        return (options && options.path) ? options.path : directory + templateName + extension;
+    };
+    
+    var shouldRender = function (passedRender, globalRender) {
+        if (globalRender === false) return passedRender === true;
+        return !(passedRender === false); 
     };
     
     return bbJST
