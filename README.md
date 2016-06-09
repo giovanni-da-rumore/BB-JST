@@ -6,12 +6,12 @@
 ##Abstract/Intentions 
 
 By following Rails's sleek syntax, this library aims to facilitate transitions from Rails to stand alone Backbone, as well as enable all coders to get a Backbone project off the ground with less initial work.
-bbJST is ideal for small to medium sized apps. The code is light-weight, efficient and -- its most beneficial feature -- maintains the lucid expressiveness of Rails's JST object, as if one had the advantage of compiling EJS templates with its Assets Pipeline. 
+The code is light-weight, efficient and -- its most beneficial feature -- maintains the lucid expressiveness of Rails's JST object, as if one had the advantage of compiling EJS templates with its Assets Pipeline. 
 
 
 ##Exposition 
 
-When writing Backbone within Rails, there's not much to loading a template. Say we have a template for reading a text, one can write:
+When writing Backbone within Rails, there's not much to loading a template. One can write:
 
 ```javascript
 MyApp.Views.TextView = Backbone.View.extend({
@@ -19,7 +19,7 @@ MyApp.Views.TextView = Backbone.View.extend({
 });
 ```
 
-Without Rails, however, the process becomes a bit more unwieldy. A common option is to use Require.js and load your template beforehand, with something like:
+Yet without Rails the process becomes a bit more unwieldy. A common option is to use Require.js and load your template beforehand, with something like:
 
 ```javascript
 define([
@@ -34,9 +34,9 @@ define([
 });
 ```
 
-You can imagine how -- while not entirely arduous -- somewhat annoying beginning each Backbone View (and file at that) with such wet code would be. Not to mention, all the code that comes with Require.js and the library's setup isn't really necessary for a fair amount of apps. 
+You can imagine how -- while not entirely arduous -- somewhat annoying beginning each Backbone View (and file at that) with such repeated boilerplate code would be. Not to mention, all the code that comes with Require.js and the library's setup isn't really necessary for a fair amount of apps. 
 
-On the other hand, Using **bbJST**, one is able to load a template by simply writing: 
+Using **bbJST**, however, one is able to load a template by simply writing: 
 
 ```javascript
 MyApp.Views.TextView = Backbone.View.extend({
@@ -54,14 +54,6 @@ Compared to the Require way as well as a few other approaches that this author m
 
 ##General Use 
 to load a template, call `bb.JST.template(templateName, view, options)` in a Backbone View, again: 
-
-```javascript
-MyApp.Views.TextView = Backbone.View.extend({
-    initialize: function () {
-        this.template = bbJST.template("single-read", this);
-    },
-});
-```
 
 The arguments are as follows:
 
@@ -141,52 +133,6 @@ The directory, extension and autoRender options can also be assigned globally:
 Essentially, bbJST works by appending a template holder to your root HTML file, loading your template into said holder and compiling the template with Underscore. The library knows to not reload your template if it already exists on the page. In addition, bbJST employs Underscore's `_.wrap` function to ensure that your View's render is not called until its template has been loaded. Upon completion, the code will automatically call render, unless otherwise specified.
  
  A final beneficial feature is bbJST's synchronicity: if you instantiate many different Views with a shared template, the code will still only make one request for that template, calling render on all of the other Views after the initial request is complete.  
-
-
-##Ridendum
-
-As mentioned above, here are a few other anti-patterns I might have used with varying degrees of success in my more tyro days.
-
-
-One way involves writing the EJS template as a series of strings in the View:
-
-```javascript 
-MyApp.Views.TextView = Backbone.View.extend({
-    
-    initialize: function () {
-        this.template = _.template(['<h3><%=Title%><h3>',
-                                    '<ul><%bullets.forEach(function (bullet) {',
-                                    '<li><%=bullet.title%> : <%=bullet.content%></li>',
-                                    '<%})%></ul>'].join(''));                                
-    }
-    ...
-})
-```
-
-With such a method you might as well not even be using templates. Plus, your Views will quickly become bloated and reading or writing any complicated html will be rather unpleasant.
-
-
-By far my favorite anti-pattern is to load all of your templates directly into your root html file before the Backbone app kicks off, seeing how deep you can descend into callback hell:
-
-```javascript
-$(document).on("ready", function () {
-    $("#homepage-tpl-holder").load("/templates/homepage.jst.ejs", function () {
-		$("#texts-index-tpl-holder").load("/templates/text_index.jst.ejs", function () {
-    		$("#text-tpl-holder").load("/templates/text_single.jst.ejs", function () {
-        		$("#compose-tpl-holder").load("/templates/text_compose.jst.ejs", function () { 
-            		$("#modal-tpl-holder").load("/templates/modal.jst.ejs", function () {
-                            MyApp.initialize();
-                        });
-        			});
-    			});
-            });
-        });
-    });
-```
-
->Tant'è amara che poco è più morte!
-
-Though the shape may be aesthetically pleasing, it's not ideal to wait for every single template to load before your app starts. And not least of all, think how much shame your friends will heap upon you...
 
 
 ***-Vale***
